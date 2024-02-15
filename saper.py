@@ -19,6 +19,7 @@ CELL_SIZE = WIDTH // COLS
 WHITE = (255, 255, 255) 
 GRAY = (200, 200, 200) 
 BLACK = (0, 0, 0) 
+GREEN = (0, 150, 0)
 BLUE = (0, 0, 255) 
 RED = (255, 0, 0) 
 
@@ -95,47 +96,71 @@ revealed = [[False for _ in range(COLS)] for _ in range(ROWS)]
 game_started = False 
 game_over = False 
 score = 0 
+retry_clicked = False  # Визначення retry_clicked перед початком головного циклу гри
 
-# Головний цикл гри 
-running = True 
-while running: 
-    for event in pygame.event.get(): 
-        if event.type == pygame.QUIT: 
-            running = False 
-        elif event.type == pygame.MOUSEBUTTONDOWN: 
-            mouse_x, mouse_y = pygame.mouse.get_pos() 
-            if not game_started and WIDTH // 2 - 100 <= mouse_x <= WIDTH // 2 + 100 and HEIGHT // 2 - 25 <= mouse_y <= HEIGHT // 2 + 25: 
-                game_started = True 
-            elif game_over and WIDTH // 2 - 100 <= mouse_x <= WIDTH // 2 + 100 and HEIGHT // 2 - 25 <= mouse_y <= HEIGHT // 2 + 25: 
-                # Якщо гра закінчилася і користувач клікнув на кнопку "Спробувати ще раз" 
+# Змінна для зберігання тексту "Game Over"
+game_over_text = None   
+
+# Головний цикл гри
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            if not game_started and WIDTH // 2 - 100 <= mouse_x <= WIDTH // 2 + 100 and HEIGHT // 2 - 25 <= mouse_y <= HEIGHT // 2 + 25:
+                game_started = True
+            elif game_over and WIDTH // 2 - 100 <= mouse_x <= WIDTH // 2 + 100 and HEIGHT // 2 - 25 <= mouse_y <= HEIGHT // 2 + 25:
+                # Якщо гра закінчилася і користувач клікнув на кнопку "Спробувати ще раз"
                 print("Ви програли! Очки:", score)
-                game_over = False 
-                revealed = [[False for _ in range(COLS)] for _ in range(ROWS)] 
+                game_over_text = font.render("Game Over", True, RED,)
+                score_text = font.render("Score: " + str(score), True, WHITE)
+                game_over = False
+                revealed = [[False for _ in range(COLS)] for _ in range(ROWS)]
                 game_started = False
-                score = 0 
+                score = 0
+                retry_clicked = True  # Встановлюємо retry_clicked в True, якщо користувач натиснув на кнопку "Спробувати ще раз"
             elif game_started: 
                 row, col = mouse_y // CELL_SIZE, mouse_x // CELL_SIZE 
                 if not revealed[row][col]: 
                     revealed[row][col] = True 
                     if mines[row][col]: 
-                        # Якщо користувач натрапив на міну, гра закінчується 
-                        print("Ви програли! Очки:", score)
-                        game_over = True 
-                    else: 
-                        # Якщо користувач натиснув на пусту клітинку, збільшуємо рахунок 
-                        score += 10 
+                        if mines[row][col]: 
+    # Якщо користувач натрапив на міну, гра закінчується
+                            print("Ви програли! Очки:", score)
+                            game_over_text = font.render("Game Over", True, BLACK)
+                            score_text = font.render("Score: " + str(score), True, WHITE)
+                            game_over = True
+                            game_started = False  # Завершуємо гру
+                            revealed = [[True for _ in range(COLS)] for _ in range(ROWS)]  # Показуємо всі клітинки
 
-    draw_grid() 
-    if not game_started: 
-        draw_start_button() 
-    elif game_over: 
-        draw_try_again_button() 
+                    else:
+                        # Якщо користувач натиснув на пусту клітинку, збільшуємо рахунок
+                        score += 10
+
+    draw_grid()
+    if not game_started:
+        draw_start_button()
+    elif game_over:
+        draw_try_again_button()
+        if game_over_text:
+            screen.blit(game_over_text, (WIDTH // 2 - 60, HEIGHT // 7))
+            screen.blit(score_text, (WIDTH // 2 - 50, HEIGHT // 6 + 50))
+    else:
+        # Показати рахунок
+        font = pygame.font.Font(None, 44)
+        score_text = font.render("Score: " + str(score), True, GREEN)
+    if retry_clicked:  # Перевіряємо, чи натиснута кнопка "Спробувати ще раз"
+            game_over_text = None  # Очищуємо текст "Game Over"
+            score_text = None  # Очищуємо набраний рахунок
+            retry_clicked = False  # Скидаємо retry_clicked
     else: 
         # Показати рахунок 
         font = pygame.font.Font(None, 36) 
-        score_text = font.render("Score: " + str(score), True, WHITE) 
+        score_text = font.render("Score: " + str(score), True, GREEN) 
         screen.blit(score_text, (10, 10))  # показати рахунок у верхньому лівому куті екрану 
 
     pygame.display.flip() 
 
-pygame.quit() 
+pygame.quit()
