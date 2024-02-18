@@ -12,7 +12,7 @@ pygame.time.delay(50)
 
 # Параметри вікна гри 
 WIDTH, HEIGHT = 700, 700 
-ROWS, COLS = 10, 10 
+ROWS, COLS = 13, 13 
 CELL_SIZE = WIDTH // COLS 
 
 # Кількість мін
@@ -78,13 +78,6 @@ def draw_grid():
     for j in range(1, len(revealed[0])):
         pygame.draw.line(screen, RED, (j * CELL_SIZE, 0), (j * CELL_SIZE, HEIGHT))
 
-# Функція для малювання кнопки "Почати гру" 
-def draw_start_button(): 
-    font = pygame.font.Font(None, 50) 
-    text = font.render("Почати гру", True, WHITE) 
-    button_rect = text.get_rect(center=(WIDTH // 2, HEIGHT - 350)) 
-    pygame.draw.rect(screen, BLUE, button_rect) 
-    screen.blit(text, button_rect) 
 
 # Функція для малювання кнопки "Спробувати ще раз" 
 def draw_try_again_button(): 
@@ -147,12 +140,12 @@ while running:
                     game_started = True
                     update_board_size()  # Оновити розміри списків
                 elif WIDTH // 2 - 100 <= mouse_x <= WIDTH // 2 + 100 and HEIGHT // 2 - 25 <= mouse_y <= HEIGHT // 2 + 25:
-                    ROWS, COLS = 12, 12  # Середній рівень
+                    ROWS, COLS = 10, 10  # Середній рівень
                     MINES = 20
                     game_started = True
                     update_board_size()  # Оновити розміри списків
                 elif WIDTH // 4 * 3 - 100 <= mouse_x <= WIDTH // 4 * 3 + 100 and HEIGHT // 2 - 25 <= mouse_y <= HEIGHT // 2 + 25:
-                    ROWS, COLS = 16, 16  # Важкий рівень
+                    ROWS, COLS = 13, 13  # Важкий рівень
                     MINES = 40
                     game_started = True
                     update_board_size()  # Оновити розміри списків
