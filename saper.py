@@ -15,6 +15,15 @@ WIDTH, HEIGHT = 700, 700
 ROWS, COLS = 10, 10 
 CELL_SIZE = WIDTH // COLS 
 
+# Кількість мін
+MINES = 15
+
+# Ініціалізація мін 
+mines = [[0 for _ in range(COLS)] for _ in range(ROWS)] 
+for _ in range(MINES): 
+    row, col = random.randint(0, ROWS - 1), random.randint(0, COLS - 1) 
+    mines[row][col] = 1 
+
 # Колір клітинок та ліній 
 WHITE = (255, 255, 255) 
 GRAY = (200, 200, 200) 
@@ -31,49 +40,43 @@ pygame.display.set_caption("Сапер")
 space_img = pygame.image.load("space.png") 
 space_img = pygame.transform.scale(space_img, (WIDTH, HEIGHT)) 
 
-# Ініціалізація мін 
-mines = [[0 for _ in range(COLS)] for _ in range(ROWS)] 
-for _ in range(15): 
-    row, col = random.randint(0, ROWS - 1), random.randint(0, COLS - 1) 
-    mines[row][col] = 1 
-
 # Функція для отримання кількості сусідніх мін 
-def count_neighboring_mines(row, col): 
-    count = 0 
-    for r in range(row - 1, row + 2): 
-        for c in range(col - 1, col + 2): 
-            if 0 <= r < ROWS and 0 <= c < COLS and mines[r][c] == 1: 
-                count += 1 
-    return count 
+def count_neighboring_mines(row, col):
+    count = 0
+    for r in range(row - 1, row + 2):
+        for c in range(col - 1, col + 2):
+            if 0 <= r < ROWS and 0 <= c < COLS and mines[r][c] == 1:
+                count += 1
+    return count
+
 
 # Функція для малювання клітинок та ліній 
-def draw_grid(): 
-    screen.blit(space_img, (0, 0)) 
-    for row in range(ROWS): 
-        for col in range(COLS): 
-            x, y = col * CELL_SIZE, row * CELL_SIZE 
-            cell_color = GRAY if revealed[row][col] else BLACK 
-            pygame.draw.rect(screen, cell_color, (x, y, CELL_SIZE, CELL_SIZE)) 
+def draw_grid():
+    screen.blit(space_img, (0, 0))
+    for row in range(ROWS):
+        for col in range(COLS):
+            if 0 <= row < ROWS and 0 <= col < COLS and revealed[row][col]:  # Перевірка меж
+                x, y = col * CELL_SIZE, row * CELL_SIZE
+                cell_color = GRAY if revealed[row][col] else BLACK
+                pygame.draw.rect(screen, cell_color, (x, y, CELL_SIZE, CELL_SIZE))
+                if 0 <= row < ROWS and 0 <= col < COLS and revealed[row][col] and not mines[row][col]:  # Перевірка меж
+                    neighboring_mines = count_neighboring_mines(row, col)
+                    if neighboring_mines:
+                        font = pygame.font.Font(None, 24)
+                        text = font.render(str(neighboring_mines), True, BLACK)
+                        text_rect = text.get_rect(center=(x + CELL_SIZE // 2, y + CELL_SIZE // 2))
+                        screen.blit(text, text_rect)
+                if 0 <= row < ROWS and 0 <= col < COLS and revealed[row][col] and mines[row][col]:  # Перевірка меж
+                    pygame.draw.rect(screen, RED, (x, y, CELL_SIZE, CELL_SIZE))
 
-            if revealed[row][col] and not mines[row][col]: 
-                neighboring_mines = count_neighboring_mines(row, col) 
-                if neighboring_mines: 
-                    font = pygame.font.Font(None, 24) 
-                    text = font.render(str(neighboring_mines), True, BLACK) 
-                    text_rect = text.get_rect(center=(x + CELL_SIZE // 2, y + CELL_SIZE // 2)) 
-                    screen.blit(text, text_rect) 
+                if revealed[row][col] and mines[row][col]:
+                    pygame.draw.rect(screen, RED, (x, y, CELL_SIZE, CELL_SIZE))
 
-            # додає червоні клітинки на місце вибуху 
-            if revealed[row][col] and mines[row][col]: 
-                pygame.draw.rect(screen, RED, (x, y, CELL_SIZE, CELL_SIZE)) 
+    for i in range(1, len(revealed)):
+        pygame.draw.line(screen, RED, (0, i * CELL_SIZE), (WIDTH, i * CELL_SIZE))
 
-    # Малювання горизонтальних ліній 
-    for i in range(1, ROWS): 
-        pygame.draw.line(screen, RED, (0, i * CELL_SIZE), (WIDTH, i * CELL_SIZE)) 
-
-    # Малювання вертикальних ліній 
-    for j in range(1, COLS): 
-        pygame.draw.line(screen, RED, (j * CELL_SIZE, 0), (j * CELL_SIZE, HEIGHT)) 
+    for j in range(1, len(revealed[0])):
+        pygame.draw.line(screen, RED, (j * CELL_SIZE, 0), (j * CELL_SIZE, HEIGHT))
 
 # Функція для малювання кнопки "Почати гру" 
 def draw_start_button(): 
@@ -90,6 +93,34 @@ def draw_try_again_button():
     button_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2)) 
     pygame.draw.rect(screen, BLUE, button_rect) 
     screen.blit(text, button_rect) 
+
+# Функція для малювання кнопок вибору рівня складності
+def draw_difficulty_buttons():
+    font = pygame.font.Font(None, 36)
+    
+    easy_button_text = font.render("Легкий", True, WHITE)
+    easy_button_rect = easy_button_text.get_rect(center=(WIDTH // 4, HEIGHT // 2))
+    pygame.draw.rect(screen, BLUE, easy_button_rect)
+    screen.blit(easy_button_text, easy_button_rect)
+
+    medium_button_text = font.render("Середній", True, WHITE)
+    medium_button_rect = medium_button_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    pygame.draw.rect(screen, BLUE, medium_button_rect)
+    screen.blit(medium_button_text, medium_button_rect)
+
+    hard_button_text = font.render("Важкий", True, WHITE)
+    hard_button_rect = hard_button_text.get_rect(center=(WIDTH // 4 * 3, HEIGHT // 2))
+    pygame.draw.rect(screen, BLUE, hard_button_rect)
+    screen.blit(hard_button_text, hard_button_rect)
+
+# Функція для оновлення розмірів списків
+def update_board_size():
+    global revealed, mines
+    revealed = [[False for _ in range(COLS)] for _ in range(ROWS)] 
+    mines = [[0 for _ in range(COLS)] for _ in range(ROWS)] 
+    for _ in range(MINES): 
+        row, col = random.randint(0, ROWS - 1), random.randint(0, COLS - 1) 
+        mines[row][col] = 1 
 
 # Початковий стан гри 
 revealed = [[False for _ in range(COLS)] for _ in range(ROWS)] 
@@ -109,8 +140,22 @@ while running:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = pygame.mouse.get_pos()
-            if not game_started and WIDTH // 2 - 100 <= mouse_x <= WIDTH // 2 + 100 and HEIGHT // 2 - 25 <= mouse_y <= HEIGHT // 2 + 25:
-                game_started = True
+            if not game_started:
+                if WIDTH // 4 - 100 <= mouse_x <= WIDTH // 4 + 100 and HEIGHT // 2 - 25 <= mouse_y <= HEIGHT // 2 + 25:
+                    ROWS, COLS = 8, 8  # Легкий рівень
+                    MINES = 10
+                    game_started = True
+                    update_board_size()  # Оновити розміри списків
+                elif WIDTH // 2 - 100 <= mouse_x <= WIDTH // 2 + 100 and HEIGHT // 2 - 25 <= mouse_y <= HEIGHT // 2 + 25:
+                    ROWS, COLS = 12, 12  # Середній рівень
+                    MINES = 20
+                    game_started = True
+                    update_board_size()  # Оновити розміри списків
+                elif WIDTH // 4 * 3 - 100 <= mouse_x <= WIDTH // 4 * 3 + 100 and HEIGHT // 2 - 25 <= mouse_y <= HEIGHT // 2 + 25:
+                    ROWS, COLS = 16, 16  # Важкий рівень
+                    MINES = 40
+                    game_started = True
+                    update_board_size()  # Оновити розміри списків
             elif game_over and WIDTH // 2 - 100 <= mouse_x <= WIDTH // 2 + 100 and HEIGHT // 2 - 25 <= mouse_y <= HEIGHT // 2 + 25:
                 # Якщо гра закінчилася і користувач клікнув на кнопку "Спробувати ще раз"
                 print("Ви програли! Очки:", score)
@@ -141,7 +186,7 @@ while running:
 
     draw_grid()
     if not game_started:
-        draw_start_button()
+        draw_difficulty_buttons()  # Малюємо кнопки для вибору рівня складності
     elif game_over:
         draw_try_again_button()
         if game_over_text:
@@ -151,10 +196,10 @@ while running:
         # Показати рахунок
         font = pygame.font.Font(None, 44)
         score_text = font.render("Score: " + str(score), True, GREEN)
-    if retry_clicked:  # Перевіряємо, чи натиснута кнопка "Спробувати ще раз"
-            game_over_text = None  # Очищуємо текст "Game Over"
-            score_text = None  # Очищуємо набраний рахунок
-            retry_clicked = False  # Скидаємо retry_clicked
+    if retry_clicked:  
+            game_over_text = None  
+            score_text = None  
+            retry_clicked = False  
     else: 
         # Показати рахунок 
         font = pygame.font.Font(None, 36) 
